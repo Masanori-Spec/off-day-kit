@@ -22,6 +22,8 @@ A native task sentinel is also created. The exact resource, vacation and task re
 
 ## Actual recurrence producer gate
 
+This gate passed at commit `d37aa05a1323344c15b461d714633a6c09a5bf05`, [run 37585161113](https://github.com/Masanori-Spec/off-day-kit/actions/runs/37585161113). [Exact output and proof hashes](VERIFICATION.md) identify the actual producer/native artifacts.
+
 The extended workflow repeats that genuine GUI authoring route. It then runs the actual `python3 -m off_day_kit apply` CLI on the resulting saved file. Its recipe selects resources 0 and 1, Fridays every two weeks, anchored Monday January 4, 2027, over January 4–February 28 inclusive, excluding January 22.
 
 The separate `date_oracle.py` imports neither the producer nor the UI harness. It advances literal Fridays by fourteen days and cross-checks the handwritten candidate list: January 8, January 22, February 5 and February 19. It requires all eight resource/date review rows, including two exclusions and A's pre-existing January 8 coverage. Exactly five intervals must be appended: A gets February 5 and 19; B gets January 8, February 5 and 19; C stays unchanged. Every new end is the following day.
@@ -49,4 +51,4 @@ All four must fail the literal interval contract without relying on a receipt ha
 
 The entire hosted run is bounded, with separate deadlines for GUI authoring and generated-output consumption. Official application/runtime releases are size/hash verified, installed runtime files match their package payload, and all vendor/runtime regular files are checked again after execution. Every required native file is newly saved; stale evidence cannot satisfy the gate. Only synthetic files, logs and screenshots are retained. No vendor binary is uploaded in the artifact.
 
-The generated-output gate has not run yet. The producer is limited to its documented pinned-beta profile. Product UI/browser behavior, other native versions, arbitrary historic `.gan` features and scheduling/leveling are outside current evidence. GitHub artifacts expire after 14 days; the workflow can reproduce the checks from source.
+The generated-output gate passed, including all three fresh-process reopened dialogs and independently inspected January/February chart markers. The producer is limited to its documented pinned-beta profile. Product UI/browser behavior, other native versions, arbitrary historic `.gan` features and scheduling/leveling are outside current evidence. A future browser producer must send its actual downloaded `.gan` through the same raw preservation oracle and official GUI/save/fresh-reopen route. GitHub artifacts expire after 14 days; the workflow can reproduce the checks from source.

@@ -1,6 +1,6 @@
 # OffDayKit
 
-Prepare finite resource days-off patterns in an existing GanttProject file. The Python producer is implemented; **its generated-output native GUI gate is pending**. The separate GUI-authored endpoint fixture has passed. No product UI is shipped yet.
+Prepare finite resource days-off patterns in an existing GanttProject file. The Python producer's actual output has passed the official native GUI, chart, save and fresh-process reopen gate. No product UI is shipped yet.
 
 Choose resource IDs from the imported project, a weekly or fortnightly weekday pattern, a Monday anchor, an inclusive date window and exclusions. OffDayKit previews every candidate date, distinguishes existing coverage from exclusions, and appends only uncovered one-day intervals. Existing vacation records and every byte outside the vacation section are preserved. Reapplying the same pattern produces an exact byte-identical no-op.
 
@@ -24,8 +24,8 @@ The first profile is explicitly limited to **GanttProject 3.4.3396 Beta VI**, UT
 
 ## Native evidence and current status
 
-The actual [GUI endpoint probe](https://github.com/Masanori-Spec/off-day-kit/actions/runs/37579068549) passed using the official pinned GanttProject ZIP, its unmodified launcher and vendor-recommended Liberica Full JRE. Genuine mouse/keyboard editing created A's January 8–10 range and B's February 1 single day; saved XML ended them on January 11 and February 2. A fresh application process reopened the actual file, displayed both intended ranges and C's empty state, and saved a fresh file with unchanged resource/vacation/task records. All 729 vendor/runtime integrity checks passed. [Exact baseline evidence and remaining gate](docs/TEST-DESIGN.md)
+The actual [generated-output run](https://github.com/Masanori-Spec/off-day-kit/actions/runs/37585161113) passed using the official pinned GanttProject ZIP, its unmodified launcher and vendor-recommended Liberica Full JRE. Genuine mouse/keyboard editing first created A's January 8–10 range and B's February 1 single day; saved XML ended them on January 11 and February 2. The CLI then added exactly five uncovered records. The official application opened those actual bytes, displayed every intended date for A/B and C's empty list, saved, closed and reopened in a fresh process. Both native saves retained all seven intervals and complete task/resource/calendar fields.
 
-The producer passes 63 unit tests and a separate literal date/byte oracle on that actual fixture. Its five-addition output, January/February chart display, native save/reopen and all four distinguishing negative controls are the next hosted acceptance gate. Unit tests and the baseline GUI probe do not establish generated-output compatibility.
+January/February chart screenshots show the selected days, the excluded January 22 without a marker, B's original February 1, and C unchanged. The separate literal oracle verifies raw byte preservation, every receipt row, exact native dates and a byte-identical repeated application; four deliberately corrupted files fail that oracle. All 63 unit tests, 98 artifact-member hashes and 729 vendor/runtime integrity checks passed. [Exact evidence](docs/VERIFICATION.md) · [Acceptance design](docs/TEST-DESIGN.md)
 
 The repository contains original source and synthetic test instructions. Native dependencies are installed separately only by the hosted verification workflow. No vendor binaries, original-code license grant, hosted interface or user data is distributed. This is an offline file-preparation prototype, not a GUI automation product.

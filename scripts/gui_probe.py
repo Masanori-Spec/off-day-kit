@@ -202,7 +202,8 @@ def literal_xml(path: Path) -> dict:
 
 def main() -> None:
     executable = str((ROOT / ".native/release/ganttproject").resolve())
-    command = ["bash", executable, "--java-home", "/usr/lib/jvm/java-21-openjdk-amd64"]
+    runtime = (ROOT / ".native/runtime-path.txt").read_text().strip()
+    command = ["bash", executable, "--java-home", runtime]
     agent = str((ROOT / ".native/ui-probe.jar").resolve())
     profile = ROOT / ".native/profile"
     profile.mkdir(exist_ok=True)

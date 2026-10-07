@@ -8,7 +8,7 @@ This is preparation of native days-off records and their display. It makes no sc
 
 ## Current native gate
 
-The hosted workflow downloads and verifies the official **GanttProject 3.4.3396 Beta VI** ZIP and uses its unmodified launcher with standard OpenJDK 21. The first AppImage attempt stopped before GUI startup because its trimmed runtime omits the instrumentation module required by the read-only inspector. No native success is claimed from that attempt. The revised gate runs the unchanged application under standard Xvfb and creates three synthetic resources through genuine GUI controls:
+The hosted workflow downloads and verifies the official **GanttProject 3.4.3396 Beta VI** ZIP and uses its unmodified launcher with the vendor-recommended **Liberica Full JRE 21.0.12.1+1**, including JavaFX. Earlier attempts stopped at missing runtime modules; they establish no native success. The revised gate runs the unchanged application under standard Xvfb and creates three synthetic resources through genuine GUI controls:
 
 - RESOURCEA: January 8–10, 2027, inclusive in the Days off editor
 - RESOURCEB: February 1, 2027, one visible day

@@ -44,7 +44,7 @@ public final class UiProbe {
                 result = inspect();
               } catch (Throwable error) {
                 result = new LinkedHashMap<>();
-                result.put("swing", List.of()); result.put("fx", List.of());
+                result.put("swing", List.of()); result.put("fx", List.of()); result.put("windows", List.of());
                 result.put("errors", List.of(error.toString()));
               }
               result.put("token", token);
@@ -77,18 +77,26 @@ public final class UiProbe {
 
   private static Map<String,Object> inspect() throws Exception {
     Map<String,Object> result = new LinkedHashMap<>();
-    List<Object> swing = new ArrayList<>(), fx = new ArrayList<>(), scenes = new ArrayList<>();
+    List<Object> swing = new ArrayList<>(), fx = new ArrayList<>(), scenes = new ArrayList<>(), windows = new ArrayList<>();
     List<String> errors = new ArrayList<>();
     count = 0;
-    SwingUtilities.invokeAndWait(() -> {
-      try {
-        for (Window window : Window.getWindows()) {
-          if (window.isShowing()) swing(window, swing, scenes, 0);
-        }
-      } catch (Throwable e) { errors.add("Swing: " + e); }
-    });
+    // Do not create the EDT from premain: the vendor must initialize its own
+    // UI threads and class-loader context before read-only discovery begins.
+    boolean swingReady = Thread.getAllStackTraces().keySet().stream()
+        .anyMatch(thread -> thread.isAlive() && thread.getName().startsWith("AWT-EventQueue"));
+    boolean fxReady = Thread.getAllStackTraces().keySet().stream()
+        .anyMatch(thread -> thread.isAlive() && thread.getName().equals("JavaFX Application Thread"));
+    if (swingReady) {
+      SwingUtilities.invokeAndWait(() -> {
+        try {
+          for (Window window : Window.getWindows()) {
+            if (window.isShowing()) swing(window, swing, scenes, 0);
+          }
+        } catch (Throwable e) { errors.add("Swing: " + e); }
+      });
+    }
     Class<?> platform = loaded("javafx.application.Platform");
-    if (platform != null) {
+    if (platform != null && fxReady) {
       CountDownLatch ready = new CountDownLatch(1);
       Runnable inspectFx = () -> {
         try {
@@ -97,6 +105,14 @@ public final class UiProbe {
           if (windowType != null && sceneType != null) {
             for (Object window : (Iterable<?>) windowType.getMethod("getWindows").invoke(null)) {
               if (Boolean.TRUE.equals(read(window, windowType, "isShowing"))) {
+                Map<String,Object> record = new LinkedHashMap<>();
+                record.put("class", window.getClass().getName());
+                record.put("bounds", List.of(read(window, windowType, "getX"), read(window, windowType, "getY"),
+                    read(window, windowType, "getWidth"), read(window, windowType, "getHeight")));
+                record.put("focused", read(window, windowType, "isFocused"));
+                Class<?> stageType = loaded("javafx.stage.Stage");
+                if (stageType != null && stageType.isInstance(window)) record.put("title", read(window, stageType, "getTitle"));
+                windows.add(record);
                 scenes.add(read(window, windowType, "getScene"));
               }
             }
@@ -113,7 +129,7 @@ public final class UiProbe {
       platform.getMethod("runLater", Runnable.class).invoke(null, inspectFx);
       if (!ready.await(8, TimeUnit.SECONDS)) throw new IllegalStateException("JavaFX discovery deadline");
     }
-    result.put("swing", swing); result.put("fx", fx); result.put("errors", errors);
+    result.put("swing", swing); result.put("fx", fx); result.put("windows", windows); result.put("errors", errors);
     return result;
   }
 

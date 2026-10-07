@@ -66,6 +66,31 @@ def nodes(data: dict) -> list[dict]:
             and not n.get("disabled", False) and n.get("enabled", True)]
 
 
+def wait_main(process: subprocess.Popen) -> None:
+    deadline = time.monotonic() + 75
+    while time.monotonic() < deadline:
+        assert process.poll() is None, "Official application exited before UI readiness"
+        try:
+            data = dump()
+            windows = [n for n in data.get("windows", []) if "GanttProject" in n.get("title", "")]
+            menu_names = {n.get("text") for n in data["fx"] if n["class"].endswith(".MenuBarButton")}
+            if len(windows) == 1 and {"Project", "Resources"} <= menu_names:
+                break
+        except AssertionError:
+            pass
+        time.sleep(0.5)
+    else:
+        raise AssertionError("Official JavaFX main window startup deadline")
+    window_ids = run("xdotool", "search", "--onlyvisible", "--name", "GanttProject").splitlines()
+    assert len(window_ids) == 1, window_ids
+    run("xdotool", "windowsize", "--sync", window_ids[0], "1450", "950")
+    run("xdotool", "windowmove", "--sync", window_ids[0], "40", "40")
+    run("xdotool", "windowactivate", "--sync", window_ids[0])
+    time.sleep(0.5)
+    windows = [n for n in dump()["windows"] if "GanttProject" in n.get("title", "")]
+    assert len(windows) == 1 and windows[0]["bounds"][2] >= 1200 and windows[0]["bounds"][3] >= 800
+
+
 def wait_node(predicate, seconds: int = 15) -> dict:
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
@@ -211,19 +236,7 @@ def main() -> None:
     with (EVIDENCE / "application.log").open("w") as log:
         process = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
         try:
-            deadline = time.monotonic() + 75
-            while time.monotonic() < deadline:
-                assert process.poll() is None, "Official application exited before UI readiness"
-                try:
-                    data = dump()
-                    if any("GanttProject" in n.get("title", "") for n in data["swing"]):
-                        break
-                except AssertionError:
-                    pass
-                time.sleep(0.5)
-            else:
-                raise AssertionError("Official main window startup deadline")
-            time.sleep(1)
+            wait_main(process)
             dump("startup-tree"); shot("startup")
             new_resource("RESOURCEA", ("2027-01-08", "2027-01-10"))
             new_resource("RESOURCEB", ("2027-02-01", "2027-02-01"))
@@ -240,8 +253,7 @@ def main() -> None:
             (IPC / "reply.json").unlink(missing_ok=True)
             process = subprocess.Popen(command + [str(EVIDENCE / "gui-authored.gan")], env=env,
                                        stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
-            time.sleep(4)
-            wait_node(lambda n: "GanttProject" in n.get("title", ""), seconds=60)
+            wait_main(process)
             # Resources view shortcut cycles forward from the saved task view.
             key("ctrl+Page_Down")
             for name in ("RESOURCEA", "RESOURCEB", "RESOURCEC"):

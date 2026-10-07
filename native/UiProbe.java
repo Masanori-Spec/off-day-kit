@@ -196,7 +196,8 @@ public final class UiProbe {
 
   private static String json(Object value) {
     if (value == null) return "null";
-    if (value instanceof Boolean || value instanceof Number) return value.toString();
+    if (value instanceof Boolean) return value.toString();
+    if (value instanceof Number number) return Double.isFinite(number.doubleValue()) ? value.toString() : "null";
     if (value instanceof Map<?,?> map) {
       List<String> parts = new ArrayList<>();
       for (Map.Entry<?,?> entry : map.entrySet()) parts.add(json(entry.getKey().toString()) + ":" + json(entry.getValue()));

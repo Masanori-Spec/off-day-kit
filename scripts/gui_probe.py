@@ -4,6 +4,7 @@ import csv
 import calendar
 import io
 import json
+import math
 import os
 from pathlib import Path
 import signal
@@ -63,7 +64,9 @@ def dump(name: str | None = None) -> dict:
 
 def nodes(data: dict) -> list[dict]:
     return [n for n in data["fx"] + data["swing"]
-            if len(n.get("bounds", [])) == 4 and n["bounds"][2] > 2 and n["bounds"][3] > 2
+            if len(n.get("bounds", [])) == 4
+            and all(isinstance(v, (int, float)) and math.isfinite(v) for v in n["bounds"])
+            and n["bounds"][2] > 2 and n["bounds"][3] > 2
             and not n.get("disabled", False) and n.get("enabled", True)]
 
 
@@ -108,7 +111,22 @@ def wait_node(predicate, seconds: int = 15) -> dict:
 
 def click(node: dict, twice: bool = False) -> None:
     x, y, w, h = node["bounds"]
-    run("xdotool", "mousemove", "--sync", str(round(x + w / 2)), str(round(y + h / 2)))
+    target_x, target_y = round(x + w / 2), round(y + h / 2)
+    # --sync exceeded its deadline during an actual repeated calendar move.
+    # Send the motion normally, then require the observed destination before
+    # clicking. This also handles an already positioned pointer explicitly.
+    run("xdotool", "mousemove", str(target_x), str(target_y))
+    deadline = time.monotonic() + 2
+    while time.monotonic() < deadline:
+        location = dict(line.split("=", 1) for line in run("xdotool", "getmouselocation", "--shell").splitlines())
+        if (int(location["X"]), int(location["Y"])) == (target_x, target_y):
+            break
+        time.sleep(.05)
+    else:
+        raise AssertionError(f"Pointer did not reach native control: {location}")
+    with (EVIDENCE / "native-clicks.jsonl").open("a") as log:
+        log.write(json.dumps({"class": node.get("class"), "text": node.get("text"),
+                              "target": [target_x, target_y], "observed": location}) + "\n")
     run("xdotool", "click", "--repeat", "2" if twice else "1", "--delay", "130", "1")
     time.sleep(0.4)
 

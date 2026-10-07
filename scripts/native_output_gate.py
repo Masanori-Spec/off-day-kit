@@ -96,7 +96,10 @@ def scroll_chart(target: date, current: date, name: str, source: bytes) -> None:
     oracle.verify_native(source, position.read_bytes())
     observed = date.fromisoformat(ET.parse(position).getroot().attrib["view-date"])
     days = (target - observed).days
-    assert abs(days) <= 7, (name, target, observed)
+    # Integer-week movement leaves up to six days, and native week framing
+    # can shift the initial date back by another six. The actual saved date
+    # remains the authority; the final fresh save must equal the target.
+    assert abs(days) <= 12, (name, target, observed)
     direction = "Future →" if days >= 0 else "← Past"
     for _ in range(abs(days)): ui.click(chart_button(direction))
     confirmed = E / f"{name}-chart.gan"

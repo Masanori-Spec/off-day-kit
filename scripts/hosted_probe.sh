@@ -99,6 +99,7 @@ openbox > evidence/window-manager.log 2>&1 &
 window_manager_pid=$!
 trap 'kill "$window_manager_pid" 2>/dev/null || true' EXIT
 timeout --kill-after=5 480 python3 scripts/gui_probe.py
+timeout --kill-after=5 600 python3 scripts/native_output_gate.py
 sha256sum --check .native/vendor-before.sha256 > evidence/vendor-unchanged.txt
 python3 - <<'PY'
 from pathlib import Path

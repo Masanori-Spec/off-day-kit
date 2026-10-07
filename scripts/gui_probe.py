@@ -228,12 +228,12 @@ def open_file(path: Path) -> None:
     time.sleep(1)
 
 
-def resource_dialog(name: str) -> None:
+def resource_dialog(name: str, expected: list[str] | None = None, prefix: str = "") -> None:
     # Resource chart text is painted by the official application. Locate its
     # actual pixels when it is not exposed as a public text control.
-    shot("resource-locate")
-    result = run("tesseract", str(EVIDENCE / "resource-locate.png"), "stdout", "--psm", "11", "tsv")
-    (EVIDENCE / f"{name}-locate.tsv").write_text(result)
+    shot(prefix + "resource-locate")
+    result = run("tesseract", str(EVIDENCE / f"{prefix}resource-locate.png"), "stdout", "--psm", "11", "tsv")
+    (EVIDENCE / f"{prefix}{name}-locate.tsv").write_text(result)
     rows = [r for r in csv.DictReader(io.StringIO(result), delimiter="\t") if r.get("text") == name]
     assert len(rows) == 1, f"Expected unique rendered resource label {name}: {rows}"
     r = rows[0]
@@ -241,9 +241,12 @@ def resource_dialog(name: str) -> None:
     key("alt+Return")
     assert named_field("Name")["text"] == name, "Opened a different resource"
     tab("Days off")
-    data = dump(f"{name}-reopened-days-tree"); shot(f"{name}-reopened-days")
+    data = dump(f"{prefix}{name}-reopened-days-tree"); shot(f"{prefix}{name}-reopened-days")
     rows = [n for n in nodes(data) if n.get("itemClass") == "net.sourceforge.ganttproject.gui.DateInterval" and n.get("text")]
-    assert len(rows) == (0 if name == "RESOURCEC" else 1), rows
+    if expected is None:
+        expected = {"RESOURCEA": ["Jan 8, 2027...Jan 10, 2027"],
+                    "RESOURCEB": ["Feb 1, 2027...Feb 1, 2027"], "RESOURCEC": []}[name]
+    assert sorted(n["text"] for n in rows) == sorted(expected), rows
     click(button("Cancel"))
 
 

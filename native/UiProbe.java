@@ -23,6 +23,7 @@ import javax.swing.text.JTextComponent;
 /** Read-only public UI discovery. No transformers, model access, or UI setters. */
 public final class UiProbe {
   private static Instrumentation instrumentation;
+  private static Map<String,Class<?>> uiTypes = Map.of();
   private static Path directory;
   private static int count;
 
@@ -65,10 +66,7 @@ public final class UiProbe {
   }
 
   private static Class<?> loaded(String name) {
-    for (Class<?> type : instrumentation.getAllLoadedClasses()) {
-      if (type.getName().equals(name)) return type;
-    }
-    return null;
+    return uiTypes.get(name);
   }
 
   private static Object read(Object object, Class<?> owner, String name) throws Exception {
@@ -76,6 +74,9 @@ public final class UiProbe {
   }
 
   private static Map<String,Object> inspect() throws Exception {
+    Map<String,Class<?>> snapshot = new LinkedHashMap<>();
+    for (Class<?> type : instrumentation.getAllLoadedClasses()) snapshot.putIfAbsent(type.getName(), type);
+    uiTypes = snapshot;
     Map<String,Object> result = new LinkedHashMap<>();
     List<Object> swing = new ArrayList<>(), fx = new ArrayList<>(), scenes = new ArrayList<>(), windows = new ArrayList<>();
     List<String> errors = new ArrayList<>();

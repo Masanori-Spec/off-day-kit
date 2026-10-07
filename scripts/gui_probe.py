@@ -201,13 +201,14 @@ def literal_xml(path: Path) -> dict:
 
 
 def main() -> None:
-    executable = str((ROOT / ".native/squashfs-root/AppRun").resolve())
+    executable = str((ROOT / ".native/release/ganttproject").resolve())
+    command = ["bash", executable, "--java-home", "/usr/lib/jvm/java-21-openjdk-amd64"]
     agent = str((ROOT / ".native/ui-probe.jar").resolve())
     profile = ROOT / ".native/profile"
     profile.mkdir(exist_ok=True)
     env = dict(os.environ, JAVA_TOOL_OPTIONS=f"-javaagent:{agent}={IPC} -Duser.home={profile} -Duser.language=en -Duser.country=US -Duser.timezone=UTC")
     with (EVIDENCE / "application.log").open("w") as log:
-        process = subprocess.Popen([executable], env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        process = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
         try:
             deadline = time.monotonic() + 75
             while time.monotonic() < deadline:
@@ -236,7 +237,7 @@ def main() -> None:
             process.wait(timeout=20)
             # A fresh process must consume the exact file created through GUI.
             (IPC / "reply.json").unlink(missing_ok=True)
-            process = subprocess.Popen([executable, str(EVIDENCE / "gui-authored.gan")], env=env,
+            process = subprocess.Popen(command + [str(EVIDENCE / "gui-authored.gan")], env=env,
                                        stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
             time.sleep(4)
             wait_node(lambda n: "GanttProject" in n.get("title", ""), seconds=60)

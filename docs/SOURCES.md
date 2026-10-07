@@ -11,10 +11,14 @@ Checked 2026-10-07. The native target is GanttProject **3.4.3396 Beta VI**, not 
 ## Exact official pins
 
 - [Release](https://github.com/bardsoftware/ganttproject/releases/tag/ganttproject-3.4.3396), tag commit `36964e221d53cf52e72a3ab81722b15819be6253`
-- [AppImage used by the probe](https://github.com/bardsoftware/ganttproject/releases/download/ganttproject-3.4.3396/ganttproject-3.4.3396.AppImage): asset `566721059`, 178,039,288 bytes, SHA-256 `2147e92f25ea4c9efad30980b3e4d15def7ceeaec08c89ddf9b7eceb9fb0586c`
-- [Official cross-platform ZIP](https://github.com/bardsoftware/ganttproject/releases/download/ganttproject-3.4.3396/ganttproject-3.4.3396.zip): asset `566731029`, 80,256,592 bytes, SHA-256 `22ab7129525b25158a41f921ae92617a436b15bb3913a970acd6ec80edfd32e4`; researched alternative, not executed by this probe
+- [Initial AppImage](https://github.com/bardsoftware/ganttproject/releases/download/ganttproject-3.4.3396/ganttproject-3.4.3396.AppImage): asset `566721059`, 178,039,288 bytes, SHA-256 `2147e92f25ea4c9efad30980b3e4d15def7ceeaec08c89ddf9b7eceb9fb0586c`
+- [Official cross-platform ZIP used by the revised probe](https://github.com/bardsoftware/ganttproject/releases/download/ganttproject-3.4.3396/ganttproject-3.4.3396.zip): asset `566731029`, 80,256,592 bytes, SHA-256 `22ab7129525b25158a41f921ae92617a436b15bb3913a970acd6ec80edfd32e4`
 
-The release API independently confirms sizes/digests; the workflow rechecks actual bytes before execution. All extracted vendor regular files are hashed before and after the GUI gate. The probe does not alter vendor classes or launch options that change system security.
+The release API independently confirms sizes/digests; the workflow rechecks actual bytes before execution. The ZIP is validated for bounded, unique regular-file/directory members before extraction. All extracted vendor regular files are hashed before and after the GUI gate. The probe does not alter vendor classes or launch options that change system security.
+
+The [first actual hosted run](https://github.com/Masanori-Spec/off-day-kit/actions/runs/37573474161) verified the AppImage but stopped before GUI startup: its runtime reported missing `libinstrument.so` / `java.instrument`. The [official packaging source](https://github.com/bardsoftware/ganttproject/blob/36964e221d53cf52e72a3ab81722b15819be6253/build-bin/package-lin.sh) lists a trimmed module set without instrumentation. The revised probe uses the same release's ZIP and the unchanged [official launcher](https://github.com/bardsoftware/ganttproject/blob/36964e221d53cf52e72a3ab81722b15819be6253/ganttproject-builder/ganttproject), whose documented `--java-home` option selects standard OpenJDK 21. The failed AppImage attempt does not establish that the application itself cannot run, and no successful GUI result is claimed yet.
+
+The hosted dependency is the full Ubuntu `openjdk-21-jdk`, including the [GUI JRE](https://packages.ubuntu.com/en/noble/openjdk-21-jre), rather than the compiler-only/headless package. The gate records the exact selected runtime version, package versions and module list, checks `java.instrument` and the AWT X11 native library, and hashes the selected runtime files before/after execution.
 
 ## Exclusive ends and genuine GUI boundary
 

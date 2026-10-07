@@ -1,6 +1,6 @@
 # OffDayKit
 
-Native-first feasibility work for a small GanttProject days-off recipe tool. **The native GUI probe is unrun; no conversion tool or product UI is shipped yet.**
+Native-first feasibility work for a small GanttProject days-off recipe tool. **The native GUI probe has not passed; no conversion tool or product UI is shipped yet.**
 
 The intended utility takes an existing UTF-8 `.gan` file and an explicitly selected set of resource IDs, expands a weekly or fortnightly weekday pattern over a finite inclusive window, and appends only uncovered days-off intervals. It will preserve existing vacation records and every byte outside the edited section. Resource selections must be made again for each imported project.
 
@@ -8,7 +8,7 @@ This is preparation of native days-off records and their display. It makes no sc
 
 ## Current native gate
 
-The hosted workflow downloads and verifies the official **GanttProject 3.4.3396 Beta VI** AppImage. It runs the unchanged application under standard Xvfb and creates three synthetic resources through genuine GUI controls:
+The hosted workflow downloads and verifies the official **GanttProject 3.4.3396 Beta VI** ZIP and uses its unmodified launcher with standard OpenJDK 21. The first AppImage attempt stopped before GUI startup because its trimmed runtime omits the instrumentation module required by the read-only inspector. No native success is claimed from that attempt. The revised gate runs the unchanged application under standard Xvfb and creates three synthetic resources through genuine GUI controls:
 
 - RESOURCEA: January 8–10, 2027, inclusive in the Days off editor
 - RESOURCEB: February 1, 2027, one visible day

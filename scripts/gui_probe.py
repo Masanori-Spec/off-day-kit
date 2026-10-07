@@ -1,6 +1,7 @@
 """Hosted native GUI authoring probe. Inputs are synthetic and local only."""
 from __future__ import annotations
 import csv
+import calendar
 import io
 import json
 import os
@@ -126,6 +127,23 @@ def named_field(label: str) -> dict:
     return wait_node(lambda n: n.get("uid") == target["labelForUid"] and "TextField" in n["class"])
 
 
+def month_arrow(data: dict, direction: str) -> dict:
+    def inside(child: dict, parent: dict) -> bool:
+        x, y, w, h = child["bounds"]
+        px, py, pw, ph = parent["bounds"]
+        return x >= px - .01 and y >= py - .01 and x + w <= px + pw + .01 and y + h <= py + ph + .01
+    visible = nodes(data)
+    labels = [n for n in visible if n["class"].endswith(".Label")
+              and "spinner-label" in n.get("styles", "") and n.get("text") in calendar.month_name[1:]]
+    assert len(labels) == 1, f"Ambiguous calendar month label: {labels}"
+    spinners = [n for n in visible if "spinner" in n.get("styles", "").split() and inside(labels[0], n)]
+    assert len(spinners) == 1, f"Ambiguous calendar month spinner: {spinners}"
+    arrows = [n for n in visible if n["class"].endswith(".Button")
+              and direction in n.get("styles", "").split() and inside(n, spinners[0])]
+    assert len(arrows) == 1, f"Ambiguous calendar month arrow: {arrows}"
+    return arrows[0]
+
+
 def add_days(first: str, last: str, name: str) -> None:
     click(button("Add"))
     for target in [first] + ([last] if last != first else []):
@@ -139,7 +157,7 @@ def add_days(first: str, last: str, name: str) -> None:
             days = [n.get("item") for n in nodes(data) if "day-cell" in n.get("styles", "") and n.get("item")]
             assert days, "Native calendar has no visible date cells"
             direction = "right-button" if target > max(days) else "left-button"
-            click(wait_node(lambda n: direction in n.get("styles", "") and n["class"].endswith(".Button")))
+            click(month_arrow(data, direction))
         else:
             raise AssertionError("Calendar navigation bound reached")
     dump(f"{name}-selected-dates-tree"); shot(f"{name}-selected-dates")
@@ -159,7 +177,7 @@ def new_resource(name: str, dates: tuple[str, str] | None) -> None:
     data = dump(f"{name}-authored-days-tree"); shot(f"{name}-authored-days")
     rows = [n for n in nodes(data) if n.get("itemClass") == "net.sourceforge.ganttproject.gui.DateInterval" and n.get("text")]
     assert len(rows) == (1 if dates else 0), rows
-    click(button("OK"))
+    click(button("Ok"))
     time.sleep(0.5)
 
 

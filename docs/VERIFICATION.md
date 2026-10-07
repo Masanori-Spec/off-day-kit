@@ -1,6 +1,6 @@
 # Native producer verification
 
-The bounded Python producer passed [hosted run 37585161113](https://github.com/Masanori-Spec/off-day-kit/actions/runs/37585161113) on 2026-10-07 at commit `d37aa05a1323344c15b461d714633a6c09a5bf05`. This is actual GUI consumption of the CLI's output, with genuine GUI authoring of its synthetic input. No product browser interface has been tested or shipped.
+The bounded Python producer passed [hosted run 37585161113](https://github.com/Masanori-Spec/off-day-kit/actions/runs/37585161113) on 2026-10-07 at commit `d37aa05a1323344c15b461d714633a6c09a5bf05`. This is actual GUI consumption of the CLI's output, with genuine GUI authoring of its synthetic input. The later offline browser candidate requires its own hosted acceptance; this record establishes the CLI/native boundary only.
 
 ## Exact evidence
 

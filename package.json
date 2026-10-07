@@ -1,0 +1,13 @@
+{
+  "name": "off-day-kit",
+  "version": "0.1.0-experimental",
+  "private": true,
+  "description": "Offline finite native resource days-off preparation",
+  "scripts": {
+    "test": "node --test tests/core.test.mjs",
+    "test:browser": "node scripts/browser_test.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

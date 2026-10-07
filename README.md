@@ -1,12 +1,18 @@
 # OffDayKit
 
-Prepare finite resource days-off patterns in an existing GanttProject file. The Python producer's actual output has passed the official native GUI, chart, save and fresh-process reopen gate. No product UI is shipped yet.
+Prepare finite resource days-off patterns in an existing GanttProject file. A Japanese/English offline browser workbench is included as a candidate. Its actual-browser/native acceptance is pending. The independent Python producer's output has already passed the official native GUI, chart, save and fresh-process reopen gate.
 
 Choose resource IDs from the imported project, a weekly or fortnightly weekday pattern, a Monday anchor, an inclusive date window and exclusions. OffDayKit previews every candidate date, distinguishes existing coverage from exclusions, and appends only uncovered one-day intervals. Existing vacation records and every byte outside the vacation section are preserved. Reapplying the same pattern produces an exact byte-identical no-op.
 
 This prepares native days-off records and their display. It does not schedule tasks, level resources or optimize workloads. GanttProject already has per-resource Days off editing and project-wide calendar import. p2gan can generate vacation records while rebuilding a project; this adapter's narrower difference is selective preparation in an existing file. [Primary sources](docs/SOURCES.md)
 
-## Run
+## Offline workbench
+
+Download [off-day-kit-offline.zip](off-day-kit-offline.zip), extract every file and open `index.html` in a current Chrome or Chromium browser. No server, account or network connection is needed. Choose a project, explicitly select resource IDs, set a weekly/fortnightly pattern and finite window, then preview and acknowledge before saving a new `.gan`. Changing the file, recipe, selections or settings invalidates the old review.
+
+All candidate dates are listed, including exclusions and already-covered days. Resource browsing uses search and pages of at most 100; the date review uses pages of 60. The complete JSON receipt contains every resource/date row. Printing includes the current review page and its overall summary. Recipes contain no resource identities; project and recipe imports require a fresh selection. The original file is never written, and links/expressions stay inert. [Browser acceptance contract](docs/BROWSER-ACCEPTANCE.md)
+
+## Python CLI
 
 Python 3.10+ and its standard library are sufficient for the producer. Run from this source directory:
 
@@ -28,4 +34,6 @@ The actual [generated-output run](https://github.com/Masanori-Spec/off-day-kit/a
 
 January/February chart screenshots show the selected days, the excluded January 22 without a marker, B's original February 1, and C unchanged. The separate literal oracle verifies raw byte preservation, every receipt row, exact native dates and a byte-identical repeated application; four deliberately corrupted files fail that oracle. All 63 unit tests, 98 artifact-member hashes and 729 vendor/runtime integrity checks passed. [Exact evidence](docs/VERIFICATION.md) · [Acceptance design](docs/TEST-DESIGN.md)
 
-The repository contains original source and synthetic test instructions. Native dependencies are installed separately only by the hosted verification workflow. No vendor binaries, original-code license grant, hosted interface or user data is distributed. This is an offline file-preparation prototype, not a GUI automation product.
+The JavaScript producer is a separate implementation with bounded tokenization and raw-byte insertion. Its 29 Node tests include 290 comparisons with the unchanged Python implementation and exact native-fixture output/receipt/no-op parity. These source tests do not replace actual browser and native validation. The workflow must run the exact packaged offline app, download its real `.gan`, and pass that output through the same independent oracle and official GUI route before browser acceptance.
+
+The repository contains original source and synthetic test instructions. Native dependencies and browser test tools are installed separately only by hosted verification. No vendor application binaries, original-code license grant, hosted interface or user data is distributed. Delivery is GitHub source plus a downloadable offline package.

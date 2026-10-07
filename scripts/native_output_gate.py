@@ -33,7 +33,7 @@ def producer(source: Path, output: Path, report: Path, recipe: Path) -> None:
     (E / f"{output.stem}-producer.log").write_text(result.stdout + result.stderr)
 
 
-def negative_controls(source: bytes, generated: bytes) -> None:
+def negative_controls(source: bytes, generated: bytes, browser: bool = False) -> None:
     needle = b'<vacation start="2027-02-05" end="2027-02-06" resourceid="0"/>'
     assert generated.count(needle) == 1
     cases = {
@@ -45,7 +45,11 @@ def negative_controls(source: bytes, generated: bytes) -> None:
     recipe_path = E / "shifted-anchor-recipe.json"
     recipe_path.write_text(json.dumps(changed_recipe))
     shifted = E / "negative-shifted-anchor.gan"
-    producer(E / "gui-authored.gan", shifted, E / "negative-shifted-anchor-receipt.json", recipe_path)
+    if browser:
+        with shifted.open("xb") as stream:
+            stream.write((E / "browser-negative-shifted-anchor.gan").read_bytes())
+    else:
+        producer(E / "gui-authored.gan", shifted, E / "negative-shifted-anchor-receipt.json", recipe_path)
     cases["shifted-anchor"] = shifted.read_bytes()
     result = {}
     for name, data in cases.items():
@@ -134,18 +138,26 @@ def scroll_chart(target: date, current: date, name: str, source: bytes) -> None:
 
 
 def main() -> None:
+    assert sys.argv[1:] in ([], ["--browser"])
+    browser = sys.argv[1:] == ["--browser"]
     source_path = E / "gui-authored.gan"
     source = source_path.read_bytes()
     recipe = ui.ROOT / "scripts/recipe.json"
     generated_path, receipt_path = E / "generated.gan", E / "generated-receipt.json"
-    producer(source_path, generated_path, receipt_path, recipe)
+    if browser:
+        proof = json.loads((E / "browser-oracle-result.json").read_text())
+        assert proof["status"] == "pass" and proof["actualBrowserBytesEqualIndependentPython"] is True
+        assert proof["sourceSha256"] == oracle.sha(source)
+        assert proof["outputSha256"] == oracle.sha(generated_path.read_bytes())
+    else:
+        producer(source_path, generated_path, receipt_path, recipe)
     generated = generated_path.read_bytes()
     oracle.verify_raw(source, generated, json.loads(receipt_path.read_text()))
     producer(generated_path, E / "no-op.gan", E / "no-op-receipt.json", recipe)
     assert (E / "no-op.gan").read_bytes() == generated
     no_op = json.loads((E / "no-op-receipt.json").read_text())
     assert no_op["no_op"] is True and no_op["addition_count"] == 0
-    negative_controls(source, generated)
+    negative_controls(source, generated, browser)
     runtime = (ui.ROOT / ".native/runtime-path.txt").read_text().strip()
     command = ["bash", str(ui.ROOT / ".native/release/ganttproject"), "--java-home", runtime]
     profile, agent = ui.ROOT / ".native/profile", ui.ROOT / ".native/ui-probe.jar"
@@ -176,12 +188,13 @@ def main() -> None:
             assert source_path.read_bytes() == source, "Original GUI fixture was changed"
             assert generated_path.read_bytes() == generated, "Native consumer changed the produced input file"
             (E / "native-generated-result.json").write_text(json.dumps({
-                "status": "pass", "actualProducerCli": True, "officialGuiConsumer": True,
+                "status": "pass", "actualProducerCli": not browser,
+                "actualBrowserDownload": browser, "officialGuiConsumer": True,
                 "freshProcessReopen": True, "fiveAdditions": True, "nativeIntervals": 7,
                 "allDisplayedDateRows": True, "januaryFebruaryChartEvidence": True,
                 "sourceUnchanged": oracle.sha(source), "producedInputUnchanged": oracle.sha(generated),
                 "negativeControlsRejected": 4, "repeatIsByteIdenticalNoOp": True,
-                "schedulingTested": False, "productUiTested": False
+                "schedulingTested": False, "productUiTested": browser
             }, indent=2))
         finally:
             if process is not None and process.poll() is None:

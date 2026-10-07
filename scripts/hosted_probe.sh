@@ -99,7 +99,12 @@ openbox > evidence/window-manager.log 2>&1 &
 window_manager_pid=$!
 trap 'kill "$window_manager_pid" 2>/dev/null || true' EXIT
 timeout --kill-after=5 480 python3 scripts/gui_probe.py
-timeout --kill-after=5 600 python3 scripts/native_output_gate.py
+python3 scripts/verify_offline.py
+timeout --kill-after=5 240 node scripts/browser_test.mjs
+timeout --kill-after=5 180 node scripts/browser_convert.mjs
+OFFDAY_NATIVE_FIXTURE_DIR="$PWD/evidence" node --test tests/core.test.mjs > evidence/browser-core-native-tests.txt
+python3 scripts/browser_oracle.py
+timeout --kill-after=5 600 python3 scripts/native_output_gate.py --browser
 sha256sum --check .native/vendor-before.sha256 > evidence/vendor-unchanged.txt
 python3 - <<'PY'
 from pathlib import Path

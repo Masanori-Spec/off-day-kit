@@ -81,10 +81,12 @@ with zipfile.ZipFile(p) as z:
 assert (target/'ganttproject').is_file() and (target/'eclipsito.jar').is_file()
 PY
 mkdir -p .native/probe-classes .native/probe-ipc
-javac --release 17 -d .native/probe-classes native/UiProbe.java
+offday_compiler=/usr/lib/jvm/java-17-openjdk-amd64/bin
+test -x "$offday_compiler/javac" && test -x "$offday_compiler/jar"
+"$offday_compiler/javac" -version > evidence/compiler-version.txt 2>&1
+"$offday_compiler/javac" --release 17 -d .native/probe-classes native/UiProbe.java
 printf 'Premain-Class: UiProbe\n\n' > .native/probe-manifest.txt
-jar cfm .native/ui-probe.jar .native/probe-manifest.txt -C .native/probe-classes .
-javac -version > evidence/compiler-version.txt 2>&1
+"$offday_compiler/jar" cfm .native/ui-probe.jar .native/probe-manifest.txt -C .native/probe-classes .
 "$offday_runtime/bin/java" -version > evidence/selected-runtime-version.txt 2>&1
 "$offday_runtime/bin/java" --list-modules > evidence/selected-runtime-modules.txt
 grep -q '^java.instrument@' evidence/selected-runtime-modules.txt

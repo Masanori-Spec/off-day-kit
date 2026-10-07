@@ -1,11 +1,11 @@
-name: Official GanttProject days-off GUI probe
+name: Official GanttProject recurrence output GUI gate
 on: [push, workflow_dispatch]
 permissions:
   contents: read
 jobs:
   official-native-gui:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Standard hosted GUI and harness tools
@@ -14,9 +14,11 @@ jobs:
           sudo apt-get install -y openjdk-21-jdk xvfb xauth openbox xdotool imagemagick tesseract-ocr libgtk-3-0t64 libasound2t64 libxtst6 libxi6
       - name: Source syntax
         run: |
-          python3 -m py_compile scripts/gui_probe.py
+          python3 -m py_compile scripts/gui_probe.py scripts/native_output_gate.py scripts/date_oracle.py
           bash -n scripts/hosted_probe.sh
-      - name: Genuine GUI authoring, save and fresh reopen
+      - name: Bounded producer and filesystem tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Genuine GUI fixture and actual recurrence output save and reopen
         run: xvfb-run -a -s '-screen 0 1600x1100x24' bash scripts/hosted_probe.sh
       - name: Retain actual native fixture and screenshots
         if: always()

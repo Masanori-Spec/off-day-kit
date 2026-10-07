@@ -72,7 +72,7 @@ def wait_main(process: subprocess.Popen) -> None:
         assert process.poll() is None, "Official application exited before UI readiness"
         try:
             data = dump()
-            windows = [n for n in data.get("windows", []) if "GanttProject" in n.get("title", "")]
+            windows = [n for n in data.get("windows", []) if "GanttProject" in (n.get("title") or "")]
             menu_names = {n.get("text") for n in data["fx"] if n["class"].endswith(".MenuBarButton")}
             if len(windows) == 1 and {"Project", "Resources"} <= menu_names:
                 break
@@ -87,7 +87,7 @@ def wait_main(process: subprocess.Popen) -> None:
     run("xdotool", "windowmove", "--sync", window_ids[0], "40", "40")
     run("xdotool", "windowactivate", "--sync", window_ids[0])
     time.sleep(0.5)
-    windows = [n for n in dump()["windows"] if "GanttProject" in n.get("title", "")]
+    windows = [n for n in dump()["windows"] if "GanttProject" in (n.get("title") or "")]
     assert len(windows) == 1 and windows[0]["bounds"][2] >= 1200 and windows[0]["bounds"][3] >= 800
 
 
@@ -113,7 +113,7 @@ def click(node: dict, twice: bool = False) -> None:
 
 
 def button(label: str) -> dict:
-    return wait_node(lambda n: n.get("text", "").replace("_", "") == label
+    return wait_node(lambda n: (n.get("text") or "").replace("_", "") == label
                      and (n["class"].endswith(".Button") or n["class"].endswith(".JButton")))
 
 
@@ -122,7 +122,7 @@ def tab(label: str) -> None:
 
 
 def named_field(label: str) -> dict:
-    target = wait_node(lambda n: n.get("text", "").rstrip(":") == label and "labelForUid" in n)
+    target = wait_node(lambda n: (n.get("text") or "").rstrip(":") == label and "labelForUid" in n)
     return wait_node(lambda n: n.get("uid") == target["labelForUid"] and "TextField" in n["class"])
 
 
@@ -170,7 +170,7 @@ def save_as(path: Path) -> None:
     field = wait_node(lambda n: "filename-input" in n.get("styles", "") and "TextField" in n["class"])
     click(field); key("ctrl+a"); type_text(str(path))
     click(wait_node(lambda n: n["class"].endswith(".Button") and "btn-attention" in n.get("styles", "")
-                    and n.get("text", "").lower().startswith("save")))
+                    and (n.get("text") or "").lower().startswith("save")))
     deadline = time.monotonic() + 20
     while time.monotonic() < deadline:
         if path.is_file() and path.stat().st_size > 0:
@@ -188,7 +188,7 @@ def open_file(path: Path) -> None:
     field = wait_node(lambda n: "filename-input" in n.get("styles", "") and "TextField" in n["class"])
     click(field); key("ctrl+a"); type_text(str(path))
     click(wait_node(lambda n: n["class"].endswith(".Button") and "btn-attention" in n.get("styles", "")
-                    and n.get("text", "").lower().startswith("open")))
+                    and (n.get("text") or "").lower().startswith("open")))
     time.sleep(1)
 
 
@@ -254,8 +254,8 @@ def main() -> None:
             process = subprocess.Popen(command + [str(EVIDENCE / "gui-authored.gan")], env=env,
                                        stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
             wait_main(process)
-            # Resources view shortcut cycles forward from the saved task view.
-            key("ctrl+Page_Down")
+            # Select the actual observed tab explicitly; a saved view may vary.
+            tab("Resources Chart")
             for name in ("RESOURCEA", "RESOURCEB", "RESOURCEC"):
                 resource_dialog(name)
             dump("reopened-main-tree"); shot("reopened-main")

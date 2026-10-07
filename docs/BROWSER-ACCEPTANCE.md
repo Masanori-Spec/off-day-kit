@@ -1,6 +1,6 @@
 # Offline browser acceptance
 
-The browser candidate is pending real hosted execution and visual review. Delivery is GitHub source plus the downloadable offline ZIP. No web hosting, account or remote storage is needed.
+The browser passed real hosted execution and independent visual review at `51b4132920f3e02bb09b2287ac9681899a023aff`, [run37592459664](https://github.com/Masanori-Spec/off-day-kit/actions/runs/37592459664). [Exact evidence](BROWSER-VERIFICATION.md) identifies the shipped package and actual output. Delivery is GitHub source plus the downloadable offline ZIP. No web hosting, account or remote storage is needed.
 
 ## Data boundary
 

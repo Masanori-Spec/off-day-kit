@@ -1,0 +1,28 @@
+name: Official GanttProject days-off GUI probe
+on: [push, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  official-native-gui:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Standard hosted GUI and harness tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-21-jdk-headless xvfb xauth openbox xdotool imagemagick tesseract-ocr libgtk-3-0t64 libasound2t64 libxtst6 libxi6
+      - name: Source syntax
+        run: |
+          python3 -m py_compile scripts/gui_probe.py
+          bash -n scripts/hosted_probe.sh
+      - name: Genuine GUI authoring, save and fresh reopen
+        run: xvfb-run -a -s '-screen 0 1600x1100x24' bash scripts/hosted_probe.sh
+      - name: Retain actual native fixture and screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: off-day-kit-native-${{ github.sha }}
+          path: evidence/
+          retention-days: 14
+          if-no-files-found: error
